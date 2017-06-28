@@ -8,8 +8,8 @@
 <script src="/crudocs/mapbox/mapbox-0.38.0/mapbox-gl.js"></script> 
 <link href="/crudocs/mapbox/mapbox-0.38.0/mapbox-gl-oracle_custom1.css" rel='stylesheet' />
 <script src="/crudocs/turf/4.4.0/turf.min.js"></script> 
-
   <style>
+    /* Map Container Sizing for full-screen */
     #map-container { width: 1200px; height: 600px;}
     #map { position:relative; width:100%; height:100%}
   </style>
@@ -21,26 +21,41 @@ var all_features = [];
 <!-- ORACLE NARATIVE: -->
 <script>
 all_features.push(
-  '{"type": "Feature", "geometry": {"type": "Point", "coordinates": [@2, @3]}, "properties": {"metric": "@4"}}'
+  '{"type": "Feature", "geometry": {"type": "Point", "coordinates": [@2, @3]}, "properties": {"location": "@4", "user_count": "@5"}}'
   );
 </script>
 
 
 <!-- ORACLE POSTFIX: -->
+<style>
+  /* Popup styling */
+  .mapboxgl-popup {
+    max-width: 400px;
+    font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+  }
+</style>
 <div id='map-container'>
   <div id='map'></div>
   <script>
-    // Combine the arrays from OBIEE into a single text string
-      var text = '{ "type": "FeatureCollection", "features": [' + all_features + ']}'
+  
+  // Combine the arrays from OBIEE into a single text string
+  var text = '{ "type": "FeatureCollection", "features": [' + all_features + ']}'
 
   // Parse the combined text string and convert it to GeoJSON format
   var obj = JSON.parse(text);
+
+  // Add Popup on Hover -- Create a popup, but don't add it to the map yet.
+  var popup = new mapboxgl.Popup({
+      closeButton: false,
+      closeOnClick: false
+  });
 
   mapboxgl.accessToken = 'pk.eyJ1IjoiY3J1LWRzYSIsImEiOiJjajQ1bmpqOG8wa2J1MzNtdTJ5emQ5MzliIn0.uSUw09NoUW0-cg3jinddXQ';
   var map = new mapboxgl.Map({
     container: 'map',
     style: 'mapbox://styles/mapbox/streets-v10',
-    zoom: 1
+    zoom: 1.15,
+    center: [0,20]
   });
   
   map.on('load', function() {
@@ -93,6 +108,23 @@ all_features.push(
       }
 
     });
+
+    map.on('mouseenter', 'oracle-data', function(e) {
+        // Change the cursor style as a UI indicator.
+        map.getCanvas().style.cursor = 'pointer';
+
+        // Populate the popup and set its coordinates
+        // based on the feature found.
+        popup.setLngLat(e.features[0].geometry.coordinates)
+            .setHTML('Location: ' + e.features[0].properties.location + '<br />Users: ' + e.features[0].properties.user_count)
+            .addTo(map);
+    });
+
+    map.on('mouseleave', 'oracle-data', function() {
+        map.getCanvas().style.cursor = '';
+        popup.remove();
+      });
+
 
   });
 
