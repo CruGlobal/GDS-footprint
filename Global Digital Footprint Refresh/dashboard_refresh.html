@@ -1,0 +1,216 @@
+<!--
+        Title:      OBIEE in page refresh
+	Author:     James Coyle (www.jamescoyle.net)
+	Date:       2015-08-10
+	Description:Self contained code to loop through each analysis on a 
+                    Dashboard page and issue a Refresh command. This will 
+                    refresh each analysis, going back to the data source, 
+                    without refreshing the whole page. 
+				 
+	Version:    2015-08-10                  First revision. 
+				
+-->
+<style type="text/css">
+.toggle {
+    margin: 4px;
+    background-color: #EFEFEF;
+    border-radius: 4px;
+    border:1px solid #D0D0D0;
+    overflow: auto;
+    float: left;
+}
+.toggle label {
+    float: left;
+    width: 32px;
+}
+.toggle label span {
+    text-align: center;
+    padding: 3px 0px;
+    display: block;
+    cursor: pointer;
+}
+.toggle label input {
+    position: absolute;
+    top: -20px;
+}
+.toggle .input-not-checked:hover{
+    background-color: #AAAAAA;
+}
+.toggle .input-checked{
+    background-color: #404040;
+    color: #F7F7F7;
+	cursor: default;
+}
+#left-refresh-wrapper{
+	float: left;
+	padding: 6px 12px 6px 12px;
+}
+#refresh-heading-wrapper{
+	font-size: 16px;
+}
+#refresh-button-wrapper{
+	width: 90px;
+	margin-left: auto;
+	margin-right: auto;
+}
+#refresh-text-wrapper{
+	padding: 6px 0px 6px 12px;
+	float: left;
+	font-size: 12px;
+	line-height: 17px;
+	border-left: 1px solid grey;
+}
+#floating-refresh-wrapper{
+	border: 1px solid grey;
+	width: 290px;
+	overflow: hidden;
+	border-radius: 8px;
+	position: fixed;
+	left: 20px;
+	bottom: 22px;
+	margin: auto; 
+	background: rgb(255, 255, 255);
+    background: rgba(255, 255, 255, .7);
+}
+ 
+ 
+</style>
+<div id="floating-refresh-wrapper">
+	<div id="left-refresh-wrapper">
+		<div id="refresh-heading-wrapper">
+			Refresh Status
+		</div>
+		<div id="refresh-button-wrapper">
+			<div class="toggle">
+				<label id="refresh-on" onclick="event.preventDefault(); toggleButton(this);"><input type="radio" name="toggle"><span class="input-checked">On</span></label>    
+			</div>
+			<div class="toggle">
+				<label id="refresh-off" onclick="event.preventDefault(); toggleButton(this);"><input type="radio" name="toggle"><span class="input-not-checked">Off</span></label>
+			</div>
+		</div>
+	</div>
+	<div id="refresh-text-wrapper">
+		<div id="last-refresh">Please wait...</div>
+		<div id="next-refresh">Please wait...</div>
+	</div>
+	<div style="clear: both;"></div> 
+</div>
+<script type="text/javascript">
+	// Get report IDs into an array
+	function initRefresh(){
+		if (typeof vReportIds !== 'undefined'){
+			for (key in vReportIds){
+				if (key != 'undefined' && key != null){
+					vObjectIds.push(vReportIds[key]);
+				}
+			}
+		}
+		else{
+			vObjectIds = [];
+		}
+	}
+ 
+	// Start timer if refreshTimerObject is null
+	function startRefreshTimer(){
+		if (refreshTimerObject === null || typeof refreshTimerObject === 'undefined'){
+			refreshTimerObject = setInterval(function () {timerTick()}, 1000);
+			vCountdown = vRefreshDuration;
+		}
+	}
+	
+	// Stop timer if refreshTimerObject is not null
+	function stopRefreshTimer(){
+		if (refreshTimerObject !== null && typeof refreshTimerObject !== 'undefined'){
+			clearTimeout(refreshTimerObject);
+			refreshTimerObject = null;
+			updateNextRefresh('-');
+		}
+	}
+ 
+	// Loop known report IDs and send them to the OBIEE refresh function
+	function timerTick(){
+		if (vCountdown === 1){
+			refreshReports();
+			vCountdown = vRefreshDuration;
+			updateLastRefreshed();
+		}
+		else{
+			vCountdown = vCountdown - 1;
+		}
+		
+		updateNextRefresh(vCountdown);
+		
+	}
+	
+	// Update display countdown
+	function refreshReports(){
+		for (key in vObjectIds){
+			HereLink(vObjectIds[key], 'Refresh');
+		}
+	}
+	
+	// Update last refresh time on Dashboard
+	function updateLastRefreshed(){
+		document.getElementById("last-refresh").innerHTML = vMessageLastRefreshed + formatDate(new Date());
+	}
+	
+	function formatDate(dt) {
+		var dd = dt.getDate();
+		var m = dt.getMonth() + 1;
+		var yyyy = dt.getFullYear();
+		var hh = dt.getHours();
+		var mm = dt.getMinutes();
+		var ss = dt.getSeconds();
+		return padZero(dd, 2) + '-' + padZero(m, 2) + '-' + yyyy + ' ' + padZero(hh, 2) + ':' + padZero(mm, 2) + ':' + padZero(ss, 2) ;
+	}
+	
+	function padZero(v, l){
+		var r = v;
+		if (v.toString().length < l){
+			for(a = v.toString().length; a < l; a++){
+				r = '0' + v;
+			}
+		}
+		return r;
+	}
+	
+	// Update last refresh time on Dashboard
+	function updateNextRefresh(i){
+		document.getElementById("next-refresh").innerHTML = vMessageNextRefresh + i;
+	}
+	
+	// toggle button and change timer status
+	function toggleButton(o){
+		if (o.childNodes[1].innerHTML !== vLastSpanClick){
+			vLastSpanClick = o.childNodes[1].innerHTML;
+			var spans = document.getElementById('refresh-button-wrapper').getElementsByTagName('span');
+			for (el in spans){
+				spans[el].className = 'input-not-checked';
+			}
+			
+			o.childNodes[1].className = 'input-checked';
+			
+			if (o.childNodes[1].innerHTML === 'Off'){
+				stopRefreshTimer();
+			}
+			else{
+				startRefreshTimer();
+			}
+		}
+	}
+	
+	var vRefreshDuration = 1800;
+	var vMessageLastRefreshed = '<strong>Last refreshed :</strong> <br />';
+	var vMessageNextRefresh =  '<strong>Next refresh : </strong>';
+	
+	var vObjectIds = [];
+	var refreshTimerObject = null;
+	var vCountdown = 0;
+	var vLastSpanClick = 'On';
+	
+	initRefresh();
+	updateLastRefreshed((new Date).toLocaleString());
+	updateNextRefresh(0);
+	startRefreshTimer();
+	
+</script>
