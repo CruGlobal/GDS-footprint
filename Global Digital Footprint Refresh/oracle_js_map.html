@@ -21,7 +21,7 @@ var all_features = [];
 <!-- ORACLE NARATIVE: -->
 <script>
 all_features.push(
-  '{"type": "Feature", "geometry": {"type": "Point", "coordinates": [@2, @3]}, "properties": {"location": "@4", "user_count": "@5"}}'
+  '{"type": "Feature", "geometry": {"type": "Point", "coordinates": [@2, @3]}, "properties": {"location": "@4", "user_count": @5}}'
   );
 </script>
 
@@ -37,12 +37,20 @@ all_features.push(
 <div id='map-container'>
   <div id='map'></div>
   <script>
-  
+
   // Combine the arrays from OBIEE into a single text string
   var text = '{ "type": "FeatureCollection", "features": [' + all_features + ']}'
 
   // Parse the combined text string and convert it to GeoJSON format
   var obj = JSON.parse(text);
+
+  // Parse the combined text string and convert it to GeoJSON format
+  var obj = JSON.parse(text);
+
+  /* /* /* SPECIAL NOTE */ 
+  // You MUST keep the "user_count" data type without commas.  
+  // Otherwise, there is complex conversions required to convert 
+  // the value back and forth to account for comma inclusions.
 
   // Add Popup on Hover -- Create a popup, but don't add it to the map yet.
   var popup = new mapboxgl.Popup({
@@ -90,7 +98,6 @@ all_features.push(
     map.addLayer({
       'id': 'oracle-data',
       'type': 'circle',
-      /*'source': obiee,*/
       'source': {
         'type': 'geojson',
         'data': obj
@@ -101,12 +108,39 @@ all_features.push(
       'paint': {
         // make circles larger as the user zooms from z12 to z22
         'circle-radius': {
-            'base': 1.75,
-            'stops': [[12, 2], [22, 180]]
+            /*'base': 1.75,
+            'stops': [[4, 2], [8, 4], [22, 180]]*/
+            'property': 'user_count',
+            'type': 'exponential',
+            'stops': [
+              [{ "zoom": 4, "value": 1 }, 2],
+              [{ "zoom": 4, "value": 10 }, 3],
+              [{ "zoom": 4, "value": 100 }, 5],
+              [{ "zoom": 4, "value": 500 }, 7],
+              [{ "zoom": 8, "value": 1 }, 2],
+              [{ "zoom": 8, "value": 10 }, 4],
+              [{ "zoom": 8, "value": 100 }, 7],
+              [{ "zoom": 8, "value": 500 }, 14],
+              [{ "zoom": 22, "value": 1 }, 180],
+              [{ "zoom": 22, "value": 10 }, 185],
+              [{ "zoom": 22, "value": 100 }, 200],
+              [{ "zoom": 22, "value": 100 }, 220]
+            ]
         },
         'circle-color': 'rgba(5,105,155,1)'
+        /*'circle-color': {
+          property: 'user_count',
+          type: 'exponential',
+          stops: [
+            [0, '#2DC4B2'],
+            [5, '#3BB3C3'],
+            [10, '#669EC4'],
+            [15, '#8B88B6'],
+            [20, '#A2719B'],
+            [25, '#AA5E79']
+          ]
+        }*/
       }
-
     });
 
     map.on('mouseenter', 'oracle-data', function(e) {
