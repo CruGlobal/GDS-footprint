@@ -41,10 +41,7 @@ all_features.push(
   var text = '{ "type": "FeatureCollection", "features": [' + all_features + ']}'
 
   // Parse the combined text string and convert it to GeoJSON format
-  var obj = JSON.parse(text);
-
-  // Parse the combined text string and convert it to GeoJSON format
-  var obj = JSON.parse(text);
+  var geo_json_master_obj = JSON.parse(text);
 
   /* /* /* SPECIAL NOTE */ 
   // You MUST keep the "user_count" data type without commas.  
@@ -99,7 +96,7 @@ all_features.push(
       'type': 'circle',
       'source': {
         'type': 'geojson',
-        'data': obj
+        'data': geo_json_master_obj
       },
       'layout': {
         'visibility': 'visible'
