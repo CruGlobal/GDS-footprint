@@ -1,0 +1,48 @@
+<!-- ORACLE PREFIX -->
+<script src="/crudocs/d3/d3.v4-2.min.js"></script>
+<script src="/crudocs/d3/packages/d3-collection.v1.min.js"></script>
+<script src="/crudocs/d3/packages/d3-color.v1.min.js"></script>
+<script src="/crudocs/d3/packages/d3-interpolate.v1.min.js"></script>
+<script src="/crudocs/Dimple/dimple-2.3.0/dimple.v2.3.0.min.js"></script>
+<script src="/crudocs/lodash/4.17.4/lodash.min.js"></script>
+
+<script>
+var all_data = [];
+</script>
+
+
+<!-- ORACLE NARATIVE: -->
+<script>
+all_data.push({location_name: "@1", website_name: "@2", session_hour: @3, user_count: @4});
+</script>
+
+
+<!-- ORACLE POSTFIX: -->
+<script>
+var parsed_data = []
+
+for (var i = 0, len = all_data.length; i < len; i++) {
+  if all_data[i].location_name in parsed_data:
+    
+    if all_data[i].website_name in parsed_data.location_name:
+
+      if all_data[i].session_hour in parsed_data:
+    
+
+    parsed_data.push('{"location_name": all_data[i]."location_name"}')
+    alert('{"location_name": all_data[i]."location_name"}')
+      
+
+
+  else:
+    parsed_data.push('{"location_name": all_data[i]."location_name", }');
+
+}
+
+/*var locations = d3.nest()
+  .key(function(d) { return d.location_name; }).sortKeys(d3.ascending)
+  .key(function(d) { return d.website_name; }).sortKeys(d3.ascending)
+  .key(function(d) { return d.session_hour; }).sortKeys(d3.ascending)  
+  .rollup(function(v) { return d3.sum(v, function(d) { return d.user_count; }) })
+  .object(all_data);*/
+</script>
